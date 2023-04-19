@@ -103,15 +103,16 @@ def change_func(*args, **kwargs):
     name = Name(args[0].strip().lower())
     #old_phone = contacts.get(name) Це буде не old_phone, а екземпляр Record
     # contacts[name] = ""
-    phones = contacts.get(str(name))[0]
+    # phones = contacts.get(str(name))[0]
     old_phone = Phone(args[1].strip().lower()) # буде на першій позиції в аргсах
     new_phone = Phone(args[2].strip().lower()) # буде на другій позиції в аргсах
     # rec = Record(name,new_phone) екземпляр Record потрібно дістати з книги контактів
     # если имени нет в словаре, оно добавится, если нет - поменяется номер
     # contacts[name] = new_phone
     # метод edit_phone у нас для списка, мы извлекаем список по ключу словаря
-    if contacts.get(str(name)):
-        Record(name, phones).edit_phone(old_phone, new_phone)
+    rec = contacts.get(str(name))
+    if rec:
+        rec.edit_phone(old_phone, new_phone)
     # rec = contacts.get(str(name))
     # без str не работает, либо rec = contacts.get(name.value)
     # if rec:
@@ -144,10 +145,13 @@ def phone_func(*args, **kwargs):
 def bday_func(*args, **kwargs):
     contacts = kwargs['contacts']
     name = Name(args[0].strip().lower())
-    bd = str(Birthday(contacts.get(str(name))[1]))
+    # bd = str(Birthday(contacts.get(str(name))[1]))
 # метод применяем к экземпляру класса
-    days_to_bd = Record(name, bd).days_to_birthday(bd)
-    return (bd, days_to_bd),contacts
+    rec = contacts.get(str(name))
+    if rec:
+        return rec.days_to_birthday(), contacts
+    # days_to_bd = Record(name, bd).days_to_birthday(bd)
+    return f"Contact {name} doesn't exist", contacts
 
 
 def show_func(*args, **kwargs):
@@ -221,7 +225,8 @@ MODES = {"hello": hello_func,
 # Передаем имя файла и путь к файлу с контактами в качестве аргументов
 def main(file_name):
     # делаем словарь экземпляром объекта AddressBook, и все, contacts только тут, не нужно делать то же самое и  перезаписывать в ф-циях
-    contacts = AddressBook(read_contacts(file_name))
+    contacts = AddressBook()
+    contacts.from_dict(read_contacts(file_name))
     while True:
         # Ф-я handler проверяет, является ли введенный текст командой, сверяясь со словарем MODES,
         # и возвращает нужную ф-ю, а также список из текста после команды
