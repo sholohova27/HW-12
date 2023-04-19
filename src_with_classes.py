@@ -165,6 +165,18 @@ def show_func(*args, **kwargs):
     return contacts, contacts
 
 
+def find_func(*args, **kwargs):
+    contacts = kwargs["contacts"]
+    n = args[0].strip().lower()
+    result = []
+    for key, value in contacts.items():
+            if n in key or \
+                    (isinstance(value, list) and any(n in phone for phone in value[0])
+                    or n.lower() in value[1].strip().lower()):
+                result.append(f"{key} : {value}")
+    return '\n'.join(result) or None, contacts
+
+
 
 def unknown_command(*args, **kwargs):
     contacts = kwargs['contacts']
@@ -199,6 +211,7 @@ MODES = {"hello": hello_func,
          "phone": phone_func,
          "bd": bday_func,
          "show": show_func,
+         "find": find_func,
          "close": exit_func,
          "exit": exit_func,
          "bye": exit_func,
