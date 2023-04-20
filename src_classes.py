@@ -93,8 +93,10 @@ class Record:
             return f"Phone number {old_phone} has been substituted with {new_phone} for contact {self.name}"
         return f'{old_phone} not in list'
 
-    def days_to_birthday(self, bday:Birthday):
-        bday = datetime.strptime(bday, '%d %B %Y')
+    def days_to_birthday(self):
+        if not self.bday:
+            return "Birthdate not set."
+        bday = datetime.strptime(self.bday, '%d %B %Y')
         now = datetime.now()
         bday_day = bday.day
         bday_month = bday.month
@@ -140,7 +142,7 @@ class AddressBook(UserDict):
         # data - поле UserDict
         # т.к. в классе Name есть маг. метод __str__, можно просто record.name
         # добавили value и-за проблем с сериализацией
-        self.data[record.name.value] = [record.phones, record.bday]
+        self.data[record.name.value] = record
         return f'{record.name.value} with {record.phones} phone and birthday {record.bday}  is successfully added in contacts'
 
     def show_all(self):
@@ -165,9 +167,21 @@ class AddressBook(UserDict):
             start += records_num
 
     def to_dict(self):
-        for key, value in self.data.items():
-            self.data[key] = [[str(phone) for phone in self.data[key][0]],self.data[key][1]]
-        return self.data
+        data = {}
+        for value in self.data.values():
+            data.update({str(value.name): {"name": str(value.name), 
+                                      "phones":[str(p) for p in value.phones], 
+                                      "bday": str(value.bday)}})
+            # self.data[key] = [[str(phone) for phone in self.data[key][0]],self.data[key][1]]
+        return data
+
+    def from_dict(self, data):
+        print(data)
+        for name in data:
+            rec = data[name]
+            self.add_record(Record(Name(rec['name']), 
+                                   [Phone(p) for p in rec['phones']],
+                                   None if rec['bday'] == "None" else Birthday(rec['bday'])))
 
     def __repr__(self):
         return str(self)
