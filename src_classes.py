@@ -19,7 +19,9 @@ class Field:
 
     # obj.value -> AttributeError, хотя так писать правильнее
     def __eq__(self, obj):
-        return self.value == obj
+        if not isinstance(obj, Field):
+            return False
+        return self.value == obj.value
 
     def __hash__(self):
         return hash(self.value)
@@ -33,6 +35,7 @@ class Name(Field):
 # поле с телефоном (отказалась от наследования, т.к. были ошибки
 class Phone(Field):
     def __init__(self, phone = None):
+# иначе не унаследуются методы
         super().__init__(phone)
         self.__phone = None
         self.phone = phone
@@ -160,7 +163,9 @@ class AddressBook(UserDict):
             # превращаем в список ключи словаря и слайсим
             result_keys = list(self.data)[start: start + records_num]
             # превращаем список ключей словаря в список строк с форматом "ключ : [значение]"
-            result_list = [f"{key} : {self.data.get(key)}" for key in result_keys]
+            # result_list = [f"{key} : {self.data.get(key)}" for key in result_keys]
+            result_list = [f"{key} : {self.data.get(key).phones}, {self.data.get(key).bday}" for key in
+                           result_keys]
             if not result_keys:
                 break
             yield '\n'.join(result_list)
@@ -169,17 +174,16 @@ class AddressBook(UserDict):
     def to_dict(self):
         data = {}
         for value in self.data.values():
-            data.update({str(value.name): {"name": str(value.name), 
-                                      "phones":[str(p) for p in value.phones], 
+            data.update({str(value.name): {"name": str(value.name),
+                                      "phones":[str(p) for p in value.phones],
                                       "bday": str(value.bday)}})
             # self.data[key] = [[str(phone) for phone in self.data[key][0]],self.data[key][1]]
         return data
 
     def from_dict(self, data):
-        print(data)
         for name in data:
             rec = data[name]
-            self.add_record(Record(Name(rec['name']), 
+            self.add_record(Record(Name(rec['name']),
                                    [Phone(p) for p in rec['phones']],
                                    None if rec['bday'] == "None" else Birthday(rec['bday'])))
 

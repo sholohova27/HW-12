@@ -89,8 +89,9 @@ def add_func(*args, **kwargs):
         contacts.add_record(rec)
         return f"Contact {name} with phone {phones} and birthday '{bday}' successfully added", contacts
     # вместо contacts[name] = phone присваиваем метод класса AddressBook
-    # contacts[name] = phone
-    return f'Contact {name} already exists.', contacts
+    contact = contacts.get(str(name))
+    contact.add_phone(*phones)
+    return f"Phone {phones} added to contact {name}.", contacts
 
 
 
@@ -139,7 +140,7 @@ def del_func(*args, **kwargs):
 def phone_func(*args, **kwargs):
     contacts = kwargs['contacts']
     name = Name(args[0].strip().lower())
-    return str(contacts.get(str(name))[0]), contacts
+    return str(contacts.get(str(name))), contacts
 
 @Error_func
 def bday_func(*args, **kwargs):
@@ -162,11 +163,9 @@ def show_func(*args, **kwargs):
             for record in contacts.paginator(records_num):
                 return record, contacts
         except ValueError:
-            return contacts, contacts
-    #         for record in contacts.paginator(len(contacts)):
-    #             return record, contacts
-    # for record in contacts.paginator(len(contacts)):
-    return contacts, contacts
+            pass
+    for record in contacts.paginator(records_num = len(contacts)):
+        return record, contacts
 
 
 def find_func(*args, **kwargs):
@@ -233,8 +232,9 @@ def main(file_name):
         func, text = handler(input('>>>'))
         # можно просто result, но так легче масштабировать, перезаписывая в contacts
         # вместо исходного словаря результат выполнения ф-ций
-        result, contacts = func(*text, contacts = contacts)
-        print(result)
+        if func:
+            result, contacts = func(*text, contacts = contacts)
+            print(result)
         if func == exit_func:
             save_contacts(file_name, contacts.to_dict())
             break
