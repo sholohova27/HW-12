@@ -35,8 +35,9 @@ def Error_func(func):
             return f'Print name and phone/s number via space', contacts
         except KeyError:
             return f'Contact {name} is absent', contacts
-        except TypeError:
-            return f'{name} not exists', contacts
+        except TypeError as e:
+            return (f'If you try to add contact, contact {name} is already exists.\n'
+                   f'If you try to change or delete contact, contact {name} doesn`t exist'), contacts
         except AttributeError:
             ...
     return inner
@@ -54,6 +55,7 @@ def help_func(*args, **kwargs):
                To change Contacts type "change"
                To get Contact`s phone number type "phone" and Contact`s name after
                To get Contact`s birthday type "bd" and Contact`s name after
+               To see all contacts with birthday in next n days, type "reminder n"
                To get all Contacts type "show all/show", to get n records, type "show n"
                To delete Contact type "delete"
                To exit type "bye"/"close"/"exit"/"." 
@@ -142,7 +144,7 @@ def phone_func(*args, **kwargs):
     name = Name(args[0].strip().lower())
     return str(contacts.get(str(name))), contacts
 
-@Error_func
+# @Error_func
 def bday_func(*args, **kwargs):
     contacts = kwargs['contacts']
     name = Name(args[0].strip().lower())
@@ -157,15 +159,43 @@ def bday_func(*args, **kwargs):
 
 def show_func(*args, **kwargs):
     contacts = kwargs['contacts']
-    if len(args) > 0:
-        try:
-            records_num = int(args[0].strip())
-            for record in contacts.paginator(records_num):
+    if contacts:
+        if len(args) > 0:
+            try:
+                records_num = int(args[0].strip())
+                for record in contacts.paginator(records_num):
+                    return record, contacts
+            except ValueError:
+                pass
+        for record in contacts.paginator(records_num = len(contacts)):
                 return record, contacts
-        except ValueError:
-            pass
-    for record in contacts.paginator(records_num = len(contacts)):
-        return record, contacts
+    return "No contacts", contacts
+
+
+def get_birthdays_in_x_days(*args, **kwargs):
+    contacts = kwargs['contacts']
+    if contacts:
+        if len(args) > 0:
+            try:
+                x = int(args[0].strip())
+                return contacts.get_birthdays_in_x_days(x), contacts
+            except ValueError:
+                pass
+        return "Type days number from today", contacts
+    return "No contacts found", contacts
+
+
+# def find_func(*args, **kwargs):
+#     contacts = kwargs["contacts"]
+#     n = args[0].strip().lower()
+#     result = []
+#     for key, value in contacts.items():
+#             if n in key or \
+#                     (isinstance(value, list) and any(n in phone for phone in value[1]) \
+#                     or n.lower() in value[2].strip().lower()):
+#                 result.append(f"{key} : {value}")
+#     return '\n'.join(result) or None, contacts
+
 
 
 def find_func(*args, **kwargs):
@@ -173,11 +203,10 @@ def find_func(*args, **kwargs):
     n = args[0].strip().lower()
     result = []
     for key, value in contacts.items():
-            if n in key or \
-                    (isinstance(value, list) and any(n in phone for phone in value[0])
-                    or n.lower() in value[1].strip().lower()):
+            if n in value.get("name").value or n.lower() in value.get("bday").value.strip().lower() \
+                    or any(n in str(phone.phone) for phone in value.get("phones")):
                 result.append(f"{key} : {value}")
-    return '\n'.join(result) or None, contacts
+    return '\n'.join(result) or f"There are no results with {n}", contacts
 
 
 
@@ -213,6 +242,7 @@ MODES = {"hello": hello_func,
          "delete": del_func,
          "phone": phone_func,
          "bd": bday_func,
+         "reminder": get_birthdays_in_x_days,
          "show": show_func,
          "find": find_func,
          "close": exit_func,
