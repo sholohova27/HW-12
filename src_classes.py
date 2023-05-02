@@ -112,7 +112,7 @@ class Record:
         if (bday_cur_Y - now).days < 0:
             bday_next_Y = datetime(year = now.year + 1, month = bday_month, day = bday.day)
             diff = bday_next_Y - now
-        return f'{diff.days} days left to your birthday'
+        return f'{self.name}, {self.bday}: {diff.days} days left to your birthday'
 
 
     def __str__(self):
@@ -190,22 +190,23 @@ class AddressBook(UserDict):
                 date = datetime.strptime(value.get('bday').value, '%d %B %Y')
                 # превращаем в дату текущего года
                 bday = datetime.strptime(f"{date.strftime(('%d %B'))} {datetime.now().year}", '%d %B %Y').date()
-                days_left = (bday - future_date).days
+                days_left = (bday-future_date).days
                 if days_left == 0:
-                    weeks_dict['Today'].append(value.name.value)
+                    weeks_dict[f'In {x} days from today'].append(value.name.value)
                 elif days_left == 1:
-                    weeks_dict['Tomorrow'].append(value.name.value)
+                    weeks_dict[f'Next day after {x} days from today'].append(value.name.value)
                 elif 1 < days_left <= 7:
-                    weeks_dict[bday.strftime('%A')].append(value.name.value)
-                elif 7 < days_left < x:
-                    weeks_dict[bday.strftime('%A %d %B')].append(value.name.value)
+                    weeks_dict[bday.strftime('%A, %d %B')].append(value.name.value)
+
 
         output_str = ''
-        for day, contacts in weeks_dict.items():
-            if contacts:
+        if weeks_dict:
+            for day, contacts in weeks_dict.items():
                 contacts_str = ', '.join(contacts)
                 output_str += f'{day}: {contacts_str}\n'
-        return output_str
+            return output_str
+        return f'There are no birthdays in {x} days from today + 7 days after'
+
 
 
 

@@ -36,8 +36,8 @@ def Error_func(func):
         except KeyError:
             return f'Contact {name} is absent', contacts
         except TypeError as e:
-            return (f'If you try to add contact, contact {name} is already exists.\n'
-                   f'If you try to change or delete contact, contact {name} doesn`t exist'), contacts
+            return (f'If you try to add new contact, contact {name} is already exists.\n'
+                   f'If you try to edit contact, contact {name} doesn`t exist'), contacts
         except AttributeError:
             ...
     return inner
@@ -51,14 +51,16 @@ def hello_func(*args, **kwargs):
 def help_func(*args, **kwargs):
     contacts = kwargs['contacts']
     return ''' 
-               For adding Contacts type "add"
-               To change Contacts type "change"
-               To get Contact`s phone number type "phone" and Contact`s name after
-               To get Contact`s birthday type "bd" and Contact`s name after
-               To see all contacts with birthday in next n days, type "reminder n"
-               To get all Contacts type "show all/show", to get n records, type "show n"
-               To delete Contact type "delete"
-               To exit type "bye"/"close"/"exit"/"." 
+               To add contacts type "add" and contact`s name after. You can also add phones (>5 digits each), birthdate (format like '27 August 1987' wo quotes), email, notes after name 
+               or leave these fields empty. You can also add phone number using this command after contact was created by it`s name. 
+               To change contact`s phone number type "change" and contact`s name after, old phone you want to change and new phone (>5 digits) at the end.
+               To get contact`s phone numbers type "phone" and contact`s name after.
+               To get contact`s birthday type "bd" and contact`s name after.
+               To see all contacts with birthday in next n days from today, type "reminder n" (for example, 'reminder 0' wo quotes). You also`ll get contacts with bithday in next 7 days 
+               after the date you want to check.
+               To get all contacts in your notebook type "show all/show", to get n records, type "show n" wo quotes.
+               To delete contact type "delete" and contact`s name after.
+               To exit and save changes type "bye"/"close"/"exit"/"." 
             ''', contacts
 
 
@@ -93,6 +95,7 @@ def add_func(*args, **kwargs):
     # вместо contacts[name] = phone присваиваем метод класса AddressBook
     contact = contacts.get(str(name))
     contact.add_phone(*phones)
+    save_contacts(file_name, contacts.to_dict())
     return f"Phone {phones} added to contact {name}.", contacts
 
 
@@ -150,10 +153,12 @@ def bday_func(*args, **kwargs):
     name = Name(args[0].strip().lower())
     # bd = str(Birthday(contacts.get(str(name))[1]))
 # метод применяем к экземпляру класса
-    rec = contacts.get(str(name))
-    if rec:
-        return rec.days_to_birthday(), contacts
-    # days_to_bd = Record(name, bd).days_to_birthday(bd)
+    try:
+        rec = contacts.get(str(name))
+        if rec:
+            return rec.days_to_birthday(), contacts
+    except AttributeError:
+        return "You need to exit and save contacts before using bd.", contacts
     return f"Contact {name} doesn't exist", contacts
 
 
@@ -181,6 +186,8 @@ def get_birthdays_in_x_days(*args, **kwargs):
                 return contacts.get_birthdays_in_x_days(x), contacts
             except ValueError:
                 pass
+            except AttributeError:
+                return "You need to exit and save contacts before using reminder.", contacts
         return "Type days number from today", contacts
     return "No contacts found", contacts
 
@@ -256,6 +263,9 @@ def main(file_name):
     # делаем словарь экземпляром объекта AddressBook, и все, contacts только тут, не нужно делать то же самое и  перезаписывать в ф-циях
     contacts = AddressBook()
     contacts.from_dict(read_contacts(file_name))
+    # обязательно нужно распаковать кортеж, иначе вывод текста будет некрасивым
+    result, contacts = help_func(contacts=contacts)
+    print(result)
     while True:
         # Ф-я handler проверяет, является ли введенный текст командой, сверяясь со словарем MODES,
         # и возвращает нужную ф-ю, а также список из текста после команды
