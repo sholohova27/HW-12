@@ -124,7 +124,8 @@ def change_func(*args, **kwargs):
     # if rec:
     #     rec.edit_phone(old_phone, new_phone)
         return f"Phone for contact {name} changed successfully.\nOld phone {old_phone}, new phone {new_phone}", contacts
-    # return f"Phone {new_phone} for contact {name} added successfully.", contacts # Якщо change буде додавати нові номери, то це не зовсім логічно(
+    # return f"Phone {new_phone} for contact {name} added successfully.", contacts
+    save_contacts(file_name, contacts.to_dict())
     return f"Contact {name} doesn't exist", contacts
 
 
@@ -139,6 +140,7 @@ def del_func(*args, **kwargs):
     name = Name(args[0].strip().lower())
     # без str не находит ключ! (либо добавлять value)
     contacts.pop(str(name))
+    save_contacts(file_name, contacts.to_dict())
     return f"Contact {name} successfully deleted", contacts
 
 @Error_func
