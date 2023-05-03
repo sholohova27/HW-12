@@ -52,7 +52,7 @@ class Phone(Field):
 
 
 class Birthday(Field):
-    def __init__(self, bday=None):
+    def __init__(self, bday= None):
         super().__init__(bday)
 # скрытое поле нужно для геттеров/сеттеров, чтобы не уйти в рекурсию
         self.__bday = None
@@ -72,17 +72,40 @@ class Birthday(Field):
         except ValueError:
             raise ValueError(f'Write birthday in format like "27 August 1987"') from None
 
+class Email(Field):
+    def __init__(self, email=None):
+        # иначе не унаследуются методы
+        super().__init__(email)
+        self.__email = None
+        self.email = email
 
-    # добавление/удаление/редактирование
+    @property
+    def email(self):
+        return self.__email
+
+    @email.setter
+    def email(self, value):
+        if value.find("@") == -1:
+            raise ValueError('Email must have special symbol @')
+        self.__email = value
+
+
+# добавление/удаление/редактирование
 class Record:
-    def __init__(self, name: Name, phones: list[Phone] = None, bday = None):
+    def __init__(self, name: Name, phones: list[Phone] = None, bday = None, emails: list[Email] = None):
         self.name = name
         self.phones = phones
+        self.emails = emails
         self.bday = bday
 
     def add_phone(self, phone: Phone):
         self.phones.append(phone)
         return f"Contact {self.name} with {phone} phone number has been added"
+
+    def add_email(self, email: Email):
+        self.emails.append(email)
+        return f"Contact {self.name} with {email} email has been added"
+
 
     def del_phone(self, phone: Phone):
         for phone in self.phones:
@@ -90,12 +113,25 @@ class Record:
             return f"Phone number {phone} has been deleted from contact {self.name}"
         return f'{phone} not in list'
 
+    def del_email(self, email: Email):
+        for email in self.emails:
+            self.emails.remove(email)
+            return f"Email {email} has been deleted from contact {self.name}"
+        return f'{email} not in list'
+
     def edit_phone(self, old_phone: Phone, new_phone: Phone):
         if old_phone in self.phones:
             self.del_phone(old_phone)
             self.add_phone(new_phone)
             return f"Phone number {old_phone} has been substituted with {new_phone} for contact {self.name}"
         return f'{old_phone} not in list'
+
+    def edit_email(self, old_email: Email, new_email: Email):
+        if old_email in self.emails:
+            self.del_email(old_email)
+            self.add_email(new_email)
+            return f"Email {old_email} has been substituted with {new_email} for contact {self.name}"
+        return f'{old_email} not in list'
 
     def days_to_birthday(self):
         if not self.bday:
@@ -155,7 +191,7 @@ class AddressBook(UserDict):
             result_keys = list(self.data)[start: start + records_num]
             # превращаем список ключей словаря в список строк с форматом "ключ : [значение]"
             # result_list = [f"{key} : {self.data.get(key)}" for key in result_keys]
-            result_list = [f"{key} : {self.data.get(key).phones}, {self.data.get(key).bday}" for key in
+            result_list = [f"{key} : {self.data.get(key).phones}, {self.data.get(key).emails}, {self.data.get(key).bday}" for key in
                            result_keys]
             if not result_keys:
                 break
@@ -167,6 +203,7 @@ class AddressBook(UserDict):
         for value in self.data.values():
             data.update({str(value.name): {"name": str(value.name),
                                       "phones":[str(p) for p in value.phones],
+                                      "emails": [str(p) for p in value.emails],
                                       "bday": str(value.bday)}})
             # self.data[key] = [[str(phone) for phone in self.data[key][0]],self.data[key][1]]
         return data

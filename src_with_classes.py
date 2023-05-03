@@ -73,6 +73,7 @@ def add_func(*args, **kwargs):
     contacts = kwargs['contacts']
     name = Name(args[0].strip().lower())
     phones = []
+    emails = []
     bday = None
     if args[1:]:
         for arg in args[1:]:
@@ -83,20 +84,24 @@ def add_func(*args, **kwargs):
             match_bd = re.search(r'\b(\d{1,2})\s(January|February|March|April|May|June|July|August|September|October|November|December)\s(\d{4})\b',' '.join(args[1:]), re.IGNORECASE)
             if match_bd:
                 bday = Birthday(f"{match_bd.group(1)} {match_bd.group(2)} {match_bd.group(3)}")
+            match_email = re.findall(r'\b[\w\.-]+@[\w\.-]+\.\w+\b', str(arg))
+            if match_email:
+                emails.extend(email.strip() for email in match_email)
     # создаем новые переменные rec, phones и bday, чтобы работать с классом Record
-    rec = Record(name, phones, bday)
+    rec = Record(name, phones, bday, emails)
     # Забираем первый и второй элемент, т.к. ф-я handler, которую вызываем в мейне,
     # возвращает ф-ю и очищенный от команды список, к-й распаковывается через * в
     # позиционные параметры add_func (в мейне): result, contacts = func(*text, Contacts=Contacts)
     # без маг. метода hash в классе тут будет ошибк, без str не работает!
     if not contacts.get(str(name)):
         contacts.add_record(rec)
-        return f"Contact {name} with phone {phones} and birthday '{bday}' successfully added", contacts
+        return f"Contact {name} with phone {phones} and birthday '{bday}' and email {emails} successfully added", contacts
     # вместо contacts[name] = phone присваиваем метод класса AddressBook
     contact = contacts.get(str(name))
     contact.add_phone(*phones)
+    contact.add_phone(*emails)
     save_contacts(file_name, contacts.to_dict())
-    return f"Phone {phones} added to contact {name}.", contacts
+    return f"Phone {phones} and email {emails} added to contact {name}.", contacts
 
 
 
@@ -214,6 +219,7 @@ def find_func(*args, **kwargs):
     for key, value in contacts.items():
             if n in value.get("name").value or n.lower() in value.get("bday").value.strip().lower() \
                     or any(n in str(phone.phone) for phone in value.get("phones")):
+                    # or any(n in str(email.email) for email in value.get("emails")):
                 result.append(f"{key} : {value}")
     return '\n'.join(result) or f"There are no results with {n}", contacts
 
