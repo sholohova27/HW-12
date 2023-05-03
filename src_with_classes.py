@@ -77,12 +77,12 @@ def add_func(*args, **kwargs):
     if args[1:]:
         for arg in args[1:]:
             if len(arg)>5:
-                match_phone = re.findall(r'\b\+?\d{1,3}-?\d{1,3}-?\d{1,4}\b', str(arg))
+                match_phone = re.findall(r'\b\+?\d{1,3}-?\d{1,3}-?\d{1,7}\b', str(arg))
                 if match_phone:
                     phones.extend([Phone(phone.strip().lower()) for phone in match_phone])  # создаем экземпляры класса Phone из match_phone и добавляем их в список phones
             match_bd = re.search(r'\b(\d{1,2})\s(January|February|March|April|May|June|July|August|September|October|November|December)\s(\d{4})\b',' '.join(args[1:]), re.IGNORECASE)
             if match_bd:
-                bday = f"{match_bd.group(1)} {match_bd.group(2)} {match_bd.group(3)}"
+                bday = Birthday(f"{match_bd.group(1)} {match_bd.group(2)} {match_bd.group(3)}")
     # создаем новые переменные rec, phones и bday, чтобы работать с классом Record
     rec = Record(name, phones, bday)
     # Забираем первый и второй элемент, т.к. ф-я handler, которую вызываем в мейне,
@@ -155,12 +155,12 @@ def bday_func(*args, **kwargs):
     name = Name(args[0].strip().lower())
     # bd = str(Birthday(contacts.get(str(name))[1]))
 # метод применяем к экземпляру класса
-#     try:
-    rec = contacts.get(str(name))
-    if rec:
-        return rec.days_to_birthday(), contacts
-    # except AttributeError:
-    #     return "You need to exit and save contacts before using bd.", contacts
+    try:
+        rec = contacts.get(str(name))
+        if rec:
+            return rec.days_to_birthday(), contacts
+    except AttributeError:
+        return "You need to exit and save contacts before using bd.", contacts
     return f"Contact {name} doesn't exist", contacts
 
 
