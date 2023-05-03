@@ -155,12 +155,12 @@ def bday_func(*args, **kwargs):
     name = Name(args[0].strip().lower())
     # bd = str(Birthday(contacts.get(str(name))[1]))
 # метод применяем к экземпляру класса
-    try:
-        rec = contacts.get(str(name))
-        if rec:
-            return rec.days_to_birthday(), contacts
-    except AttributeError:
-        return "You need to exit and save contacts before using bd.", contacts
+#     try:
+    rec = contacts.get(str(name))
+    if rec:
+        return rec.days_to_birthday(), contacts
+    # except AttributeError:
+    #     return "You need to exit and save contacts before using bd.", contacts
     return f"Contact {name} doesn't exist", contacts
 
 
